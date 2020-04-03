@@ -165,8 +165,12 @@ class Flexible extends Field
     {
         $count = count($arguments);
 
-        if($count === 3) {
-            $this->registerLayout(new Layout($arguments[0], $arguments[1], $arguments[2]));
+        if($count === 4) {
+            if (!isset($arguments[3])) {
+                throw new \Exception('Missing model');
+            }
+
+            $this->registerLayout(new Layout($arguments[0], $arguments[1], $arguments[2], null, [], $arguments[3]));
             return $this;
         }
 

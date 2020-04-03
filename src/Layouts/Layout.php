@@ -11,11 +11,17 @@ use Illuminate\Database\Eloquent\Concerns\HasAttributes;
 use Illuminate\Database\Eloquent\Concerns\HidesAttributes;
 use Illuminate\Contracts\Support\Arrayable;
 
-class Layout implements LayoutInterface, JsonSerializable, ArrayAccess, Arrayable
+use Spatie\MediaLibrary\Conversion\Conversion;
+use Spatie\MediaLibrary\Models\Media;
+use Spatie\MediaLibrary\HasMedia\HasMedia;
+use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
+
+class Layout implements LayoutInterface, JsonSerializable, ArrayAccess, Arrayable, HasMedia
 {
     use HasAttributes;
     use HidesAttributes;
     use HasFlexible;
+    use HasMediaTrait;
 
     /**
      * The layout's name
@@ -67,6 +73,11 @@ class Layout implements LayoutInterface, JsonSerializable, ArrayAccess, Arrayabl
     protected $dates = [];
 
     /**
+     *
+     */
+    protected $mediaResource = null;
+
+    /**
      * Create a new base Layout instance
      *
      * @param string $title
@@ -75,13 +86,14 @@ class Layout implements LayoutInterface, JsonSerializable, ArrayAccess, Arrayabl
      * @param string $key
      * @return void
      */
-    public function __construct($title = null, $name = null, $fields = null, $key = null, $attributes = [])
+    public function __construct($title = null, $name = null, $fields = null, $key = null, $attributes = [], $mediaResource = null)
     {
         $this->title = $title ?? $this->title();
         $this->name = $name ?? $this->name();
         $this->fields = collect($fields ?? $this->fields());
         $this->key = is_null($key) ? null : $this->getProcessedKey($key);
         $this->setRawAttributes($this->cleanAttributes($attributes));
+        $this->mediaResource = $mediaResource;
     }
 
     /**
@@ -192,7 +204,8 @@ class Layout implements LayoutInterface, JsonSerializable, ArrayAccess, Arrayabl
             $this->name,
             $this->fields->all(),
             $key,
-            $attributes
+            $attributes,
+            $this->mediaResource
         );
     }
 
@@ -531,6 +544,83 @@ class Layout implements LayoutInterface, JsonSerializable, ArrayAccess, Arrayabl
     public function toArray()
     {
         return $this->attributesToArray();
+    }
+
+    public function setMediaResource($resource)
+    {
+        // TODO: Type checks
+        $this->mediaResource = $resource;
+    }
+
+    public function getMediaResource(): HasMedia
+    {
+        // TODO: Type checks
+        return $this->mediaResource;
+    }
+
+    public function media()
+    {
+        return $this->getMediaResource()->media();
+    }
+
+    public function addMedia($file)
+    {
+        return $this->getMediaResource()->addMedia($file);
+    }
+
+    public function copyMedia($file)
+    {
+        return $this->getMediaResource()->copyMedia($file);
+    }
+
+    public function hasMedia(string $collectionMedia = ''): bool
+    {
+        return $this->getMediaResource()->hasMedia($collectionMedia);
+    }
+
+    public function getMedia(string $collectionName = 'default', $filters = [])
+    {
+        return $this->getMediaResource()->getMedia($collectionName, $filters);
+    }
+
+    public function clearMediaCollection(string $collectionName = 'default')
+    {
+        return $this->getMediaResource()->clearMediaCollection($collectionName);
+    }
+
+    public function clearMediaCollectionExcept(string $collectionName = 'default', $excludedMedia = [])
+    {
+        return $this->getMediaResource()->clearMediaCollectionExcept($collectionName, $excludedMedia);
+    }
+
+    public function shouldDeletePreservingMedia()
+    {
+        return $this->getMediaResource()->shouldDeletePreservingMedia();
+    }
+
+    public function loadMedia(string $collectionName)
+    {
+        return $this->getMediaResource()->loadMedia($collectionName);
+    }
+
+    public function addMediaConversion(string $name): Conversion
+    {
+        return $this->getMediaResource()->addMediaConversion($name);
+    }
+
+    public function registerMediaConversions(Media $media = null)
+    {
+        return $this->getMediaResource()->registerMediaConversions($media);
+    }
+
+    public function registerMediaCollections()
+    {
+        return $this->getMediaResource()->registerMediaCollections();
+    }
+
+    public function registerAllMediaConversions()
+    {
+        return $this->getMediaResource()->registerAllMediaConversions();
     }
 
 }
